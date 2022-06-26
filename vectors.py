@@ -2,9 +2,9 @@ from decimal import *
 import math
 
 class Vector(object):
-
     def __init__(self, coordinates):
         try:
+            getcontext().prec = 4
             if not coordinates:
                 raise ValueError
             self.coordinates = tuple(coordinates)
@@ -22,68 +22,71 @@ class Vector(object):
 
     def __eq__(self, v):
         return self.coordinates == v.coordinates
-
+# Comprobación de si un vector es el vector nulo
     def isnull(self):
-        f = float(0)
-        for x in self:
-            f = f + x
-        return( f == 0 )
-    def size(self):
-        f = 0
+        f = Decimal(0)
         for x in self.coordinates:
-            f = f + x**2
+            f = f + Decimal(x)
+        return( f == Decimal(0))
+# Módulo del vector
+    def size(self):
+        f = Decimal(0)
+        for x in self.coordinates:
+            f = f + Decimal(x**2)
         f = math.sqrt( f )
         return f
-
+# Añadir un vector
     def addv(self,other ):
         i = int(0)
         myarray = []
         for x in self.coordinates:
-            myarray.append( x )
+            myarray.append( Decimal(x) )
         for x in other.coordinates:
-            myarray[i] = myarray[i] + x
+            myarray[i] = myarray[i] + Decimal(x)
             i = i + 1
+
         return Vector( myarray )
 
-    def subv(self,other ):
-        lv = other.sprod(-1)
+# Restar un vector
+    def subv(self,other):
+        lv = other.xk(-1)
         return self.addv( lv )
 
+# Obtener el vector director de uno dado
     def direc(self):
         if self.isnull():
             myvector = self
         else:
             myarray = []
             cx      = Decimal( 0 )
-            mysze   = Decimal( 0 )
             mysize  = self.size( )
             for x in self.coordinates:
-                cx = x
-                cx = cx / mysize
+                cx = Decimal(x)
+                cx = cx / Decimal(mysize)
                 myarray.append( cx )
             myvector = Vector( myarray )
 
         return myvector
-
-    def sprod(self,scalar):
+# Multiplicar por un vector
+    def xk(self,scalar):
 
         myarray = []
         for x in self.coordinates:
-            myarray.append( x * scalar )
+            myarray.append( Decimal( x ) * Decimal( scalar ) )
         return Vector( myarray )
-
-    def inner(self,other):
+# Producto interno o producto escalar
+    def xinterno(self,other):
         i = int(0)
         myarray = []
-        res = float(0)
+        res = Decimal(0)
         for x in self.coordinates:
-            myarray.append(x)
+            myarray.append(Decimal(x))
         for x in other.coordinates:
-            res = res + ( myarray[i] * x )
+            res = res + ( myarray[i] * Decimal(x) )
             i = i + 1
         return res
-
-    def vectx(self,other):
+# Producto vectorial
+    def xvectorial(self,other):
         cs = []
         co = []
         cn = []
@@ -91,58 +94,53 @@ class Vector(object):
             cs.append(x)
         for x in other.coordinates:
             co.append(x)
-        cn.append(  cs[1]*co[2] - cs[2]*co[1] )
-        cn.append(  cs[2]*co[0] - cs[0]*co[2] )
-        cn.append(  cs[0]*co[1] - cs[1]*co[0] )
+        cn.append(  Decimal(cs[1])*Decimal(co[2]) - Decimal(cs[2])*Decimal(co[1]) )
+        cn.append(  Decimal(cs[2])*Decimal(co[0]) - Decimal(cs[0])*Decimal(co[2]) )
+        cn.append(  Decimal(cs[0])*Decimal(co[1]) - Decimal(cs[1])*Decimal(co[0]) )
         return( Vector( cn ))
 
-    def angle(self,other,opt):
-        res = float( 0 )
-        mod = self.size() * oher.size()
+# Ángulo con otro vector
+    def ang(self,other,opt):
+        res = Decimal( 0 )
+        mod = self.size() * other.size()
         if mod != 0:
-            res = self.inner(other)
-            res = res / self.size()
-            res = res / other.size()
+            res = self.xinterno(other)
+            res = res / Decimal( self.size() )
+            res = res / Decimal( other.size() )
             res = math.acos(res)
             if opt == "d":
-                res = res * 180 / math.pi
+                res = Decimal( res * 180) / Decimal(math.pi)
         return res
-
-    def isortog(self,other):
-        res = float( 0 )
-        res = self.inner(other)
-        return ( res == 0 )
-
-    def isparal(self,other):
-        res = float( 0 )
-        res = self.inner(other)
-        return ( res == self.size() * other.size() )
-
+# Proyección sobre un vector
     def project(self,other):
         u     = other.direc()
-        lp    = u.inner(self)
-        return( sprod(lp,u))
+        lp    = u.xinterno(self)
+        return( kxv(lp,u))
 
-    def getortog(self,other):
+# Complemento ortoganal sobre un vector
+    def ortogon(self,other):
         u     = other.direc()
         vl    = self.project(u)
         return( self.subv(vl))
 
 
-
+def setprec(decleng):
+    getcontext().prec = decleng
 def sumav(u,v):
     return( u.addv(v))
 def restav(u,v):
     return( u.subv(v))
 def xvectorial(u,v):
-    return( u.vectx(v))
+    return( u.xvectorial(v))
 def xinterno(u,v):
-    return( u.inner(v))
-def xscalar(k,v):
-    return( v.sprod(k))
+    return( u.xinterno(v))
+def kxv(k,v):
+    return( v.xk(k))
+def angulo(u,v,opt):
+    return(u.ang(v,opt))
 def check():
-    u = Vector([1,1,1])
-    v = Vector([1,2,-1])
+    u = Vector([4.05,1,1])
+    v = Vector([4.019,2,-1])
     k = 3.2
     print(u)
     print(v)
@@ -152,11 +150,13 @@ def check():
     print('Resta vectorial   :')
     print(restav(u,v))
     print('Producto escalar  :')
-    print(xscalar(k,u))
-    print(xscalar(k,v))
+    print(kxv(k,u))
+    print(kxv(k,v))
+    print(kxv(7,v))
     print('Producto vectorial:')
     print(xvectorial(u,v))
     print('Producto interno  :')
     print(xinterno(u,v))
-def help()
+
+def help():
     print("MÓDULO ALGEBRA")
